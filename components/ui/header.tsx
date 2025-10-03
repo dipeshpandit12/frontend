@@ -122,7 +122,10 @@ export default function Header() {
         </div>
 
         {/* Account & Lists */}
-        <div className="hidden lg:flex flex-col text-sm">
+        <div 
+          className="hidden lg:flex flex-col text-sm cursor-pointer hover:bg-[#164a73] p-2 rounded transition-colors"
+          onClick={() => router.push('/seller-listing')}
+        >
           <span className="text-[#D2E9F4] text-xs">Hello, sign in</span>
           <span className="font-semibold">Account &amp; Lists</span>
         </div>

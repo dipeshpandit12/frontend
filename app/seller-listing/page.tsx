@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import Header from '@/components/ui/header'
+import { X } from 'lucide-react'
 
 interface ApiResponse {
   trace_id: string
@@ -17,6 +19,7 @@ interface ApiResponse {
 }
 
 export default function SellerListingPage() {
+  const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
@@ -25,6 +28,26 @@ export default function SellerListingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [response, setResponse] = useState<ApiResponse | null>(null)
   const [error, setError] = useState('')
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [processingTime, setProcessingTime] = useState(30)
+
+  // Processing timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout
+    if (isProcessing && processingTime > 0) {
+      timer = setTimeout(() => {
+        setProcessingTime(prev => prev - 1)
+      }, 1000)
+    } else if (isProcessing && processingTime === 0) {
+      // Redirect to product-preview page after 30 seconds
+      router.push('/product-preview')
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [isProcessing, processingTime, router])
 
   const handleFileSelect = async (file: File) => {
     setSelectedFile(file)
@@ -71,19 +94,47 @@ export default function SellerListingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Enhanced validation
-    if (!selectedFile && !uploadedImageUrl) {
-      setError('Please select an image file')
-      return
+    // Directly redirect to product-preview page
+    router.push('/product-preview')
+  }
+
+  const handleDemoSubmission = async () => {
+    setIsDemoMode(true)
+    setIsLoading(true)
+    setError('')
+
+    try {
+      // Generate AI content using just the text description
+      const demoResponse: ApiResponse = {
+        trace_id: `demo_${Date.now()}`,
+        title: generateDemoTitle(description),
+        description: generateDemoDescription(description),
+        slogan: generateDemoSlogan(description),
+        hashtags: generateDemoHashtags(description),
+        image_description: `Professional product showcase for: ${description.substring(0, 100)}...`,
+        video_description: `Dynamic product demonstration video featuring the key benefits and features of this product. Perfect for social media marketing and product presentations.`
+      }
+
+      // Simulate loading time
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      setResponse(demoResponse)
+      setUploadedImageUrl('/images/placeholder-product.jpg') // Demo placeholder
+      
+      // Start the 30-second processing countdown
+      setIsProcessing(true)
+      setProcessingTime(30)
+    } catch (err) {
+      setError('Demo generation failed. Please try again.')
+      console.error(err)
+    } finally {
+      setIsLoading(false)
     }
-    
-    if (!description.trim()) {
-      setError('Please provide a product description')
-      return
-    }
-    
-    if (!uploadedImageUrl) {
-      setError('Please wait for the image to finish uploading')
+  }
+
+  const handleRealSubmission = async () => {
+    if (!uploadedImageUrl || !description.trim()) {
+      setError('Please provide both image file and description')
       return
     }
 
@@ -91,15 +142,9 @@ export default function SellerListingPage() {
     setError('')
 
     try {
-      // Convert relative URL to absolute URL for external API
       const absoluteImageUrl = uploadedImageUrl.startsWith('/') 
         ? `${window.location.origin}${uploadedImageUrl}` 
         : uploadedImageUrl
-
-      console.log('Submitting data:', {
-        image_url: absoluteImageUrl,
-        text: description
-      })
 
       const res = await fetch('https://hsi-battle.onrender.com/processing-input', {
         method: 'POST',
@@ -112,23 +157,44 @@ export default function SellerListingPage() {
         })
       })
 
-      console.log('API Response status:', res.status)
-
       if (!res.ok) {
-        const errorText = await res.text()
-        console.error('API Error:', errorText)
-        throw new Error(`Request failed with status ${res.status}`)
+        throw new Error('Failed to process request')
       }
 
       const data: ApiResponse = await res.json()
-      console.log('API Response data:', data)
       setResponse(data)
+      
+      // Start the 30-second processing countdown
+      setIsProcessing(true)
+      setProcessingTime(30)
     } catch (err) {
-      console.error('Submit error:', err)
       setError('Failed to process your request. Please try again.')
+      console.error(err)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Demo content generation functions
+  const generateDemoTitle = (desc: string): string => {
+    const keywords = desc.toLowerCase().split(' ').slice(0, 3)
+    return `Premium ${keywords.join(' ')} - Professional Quality Product`
+  }
+
+  const generateDemoDescription = (desc: string): string => {
+    return `${desc} This exceptional product combines innovative design with superior functionality, making it the perfect choice for discerning customers who value quality and performance.`
+  }
+
+  const generateDemoSlogan = (desc: string): string => {
+    const firstWord = desc.split(' ')[0] || 'Excellence'
+    return `Experience ${firstWord} Like Never Before`
+  }
+
+  const generateDemoHashtags = (desc: string): string[] => {
+    const words = desc.toLowerCase().split(' ').filter(word => word.length > 3)
+    const baseHashtags = ['#premium', '#quality', '#innovation', '#bestseller']
+    const dynamicHashtags = words.slice(0, 3).map(word => `#${word}`)
+    return [...baseHashtags, ...dynamicHashtags].slice(0, 6)
   }
 
   const resetForm = () => {
@@ -139,6 +205,9 @@ export default function SellerListingPage() {
     setDescription('')
     setResponse(null)
     setError('')
+    setIsDemoMode(false)
+    setIsProcessing(false)
+    setProcessingTime(30)
   }
 
   return (
@@ -228,7 +297,7 @@ export default function SellerListingPage() {
 
               <Button 
                 type="submit" 
-                disabled={isLoading || isUploading || (!uploadedImageUrl && !selectedFile) || !description.trim()}
+                disabled={isLoading || isUploading || !description.trim()}
                 className="w-full py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -276,15 +345,30 @@ export default function SellerListingPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="p-6 shadow-lg border border-gray-200 bg-white">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Product Image</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                  {isDemoMode ? 'Demo Video' : 'Product Image'}
+                </h3>
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
-                  <Image 
-                    src={uploadedImageUrl || imagePreview} 
-                    alt="Product"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
+                  {isDemoMode ? (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-600">
+                      <div className="text-center text-white">
+                        <div className="text-6xl mb-4">🎬</div>
+                        <h4 className="text-xl font-bold mb-2">Demo Video</h4>
+                        <p className="text-sm opacity-90">Professional Product Showcase</p>
+                        <div className="mt-4 text-xs opacity-75">
+                          Video would be loaded from /public/demo.mp4
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Image 
+                      src={uploadedImageUrl || imagePreview} 
+                      alt="Product"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  )}
                 </div>
               </Card>
 
@@ -338,6 +422,53 @@ export default function SellerListingPage() {
           </div>
         )}
       </div>
+
+
+
+      {/* Processing Overlay */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center">
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Processing Your Request</h3>
+                <p className="text-gray-600">
+                  Please wait while we prepare your product preview...
+                </p>
+              </div>
+              
+              {/* Loading Dots Animation */}
+              <div className="flex justify-center space-x-2">
+                <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"></div>
+                <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+              </div>
+              
+              {/* Countdown Timer */}
+              <div className="space-y-2">
+                <div className="text-3xl font-bold text-blue-600">
+                  {processingTime}s
+                </div>
+                <p className="text-sm text-gray-500">
+                  Redirecting to preview in {processingTime} seconds...
+                </p>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-1000 ease-linear"
+                  style={{width: `${((30 - processingTime) / 30) * 100}%`}}
+                ></div>
+              </div>
+              
+              <div className="text-xs text-gray-400">
+                Do not close this window
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

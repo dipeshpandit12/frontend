@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/ui/header';
@@ -8,12 +8,54 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Star, Heart } from 'lucide-react';
 
+// Custom Image component with retry logic
+const RetryImage = ({ src, alt, ...props }: { src: string; alt: string; [key: string]: any }) => {
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+  const retryCount = useRef(0);
+  const maxRetries = 5;
+
+  const handleError = () => {
+    retryCount.current += 1;
+    console.log(`Image load failed for ${src}, attempt ${retryCount.current}/${maxRetries}`);
+    
+    if (retryCount.current < maxRetries) {
+      // Retry with cache-busting parameter
+      const separator = src.includes('?') ? '&' : '?';
+      setCurrentSrc(`${src}${separator}retry=${retryCount.current}&t=${Date.now()}`);
+    } else {
+      // Give up after max retries and use fallback
+      console.log(`Max retries reached for ${src}, using fallback`);
+      setCurrentSrc('/images/placeholder-product.jpg');
+      setHasError(true);
+    }
+  };
+
+  // Reset retry count when src changes
+  useEffect(() => {
+    retryCount.current = 0;
+    setCurrentSrc(src);
+    setHasError(false);
+  }, [src]);
+
+  return (
+    <Image 
+      {...props}
+      src={currentSrc}
+      alt={alt}
+      onError={handleError}
+      placeholder="blur"
+      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    />
+  );
+};
+
 // Complete product database
 const allProducts = [
   {
     id: 1,
     title: "100 PCS Clear PET Plastic Storage Boxes Transparent Present Box Empty Container&apos;s Rectangle Cube Candy Chocolate...",
-    image: "/images/products/storage-boxes.jpg",
+    image: "/Product02.jpeg",
     price: "$23.99",
     originalPrice: null,
     rating: 4.3,
@@ -26,8 +68,8 @@ const allProducts = [
   },
   {
     id: 2,
-    title: "Selfckf 200 Pieces Acrylic Keychain Blanks Acrylic Transparent Pendants Includes Circle Heart Square Rectangle...",
-    image: "/images/products/acrylic-keychain-1.jpg",
+    title: "Texas state tshirt",
+    image: "/Product03.jpeg",
     price: "$21.99",
     originalPrice: null,
     rating: 4.5,
@@ -39,8 +81,8 @@ const allProducts = [
   },
   {
     id: 3,
-    title: "Selfckf 200 Pieces Acrylic Keychain Blanks Acrylic Transparent Pendants Includes Circle Heart Square Rectangle...",
-    image: "/images/products/acrylic-keychain-2.jpg",
+    title: "The best tshirt",
+    image: "/Product04.jpeg",
     price: "$21.99",
     originalPrice: null,
     rating: 4.5,
@@ -52,8 +94,8 @@ const allProducts = [
   },
   {
     id: 4,
-    title: "SPACE Seating Big and Tall Dual Layer AirGrid Back with Mesh Seat, Adjustable Flooring and Gunmetal Finish Base Drafting...",
-    image: "/images/products/office-chair.jpg",
+    title: "Tshirt TXSTE",
+    image: "/images/placeholder-product.jpg",
     price: "$305.14",
     originalPrice: null,
     rating: 4.0,
@@ -67,7 +109,7 @@ const allProducts = [
   {
     id: 5,
     title: "Selfckf 30 Pieces Believe Bell Ornament for Christmas Tree Sleigh Bell Ribbon Xmas Party Home Decoration 1.5 inc...",
-    image: "/images/products/christmas-bells.jpg",
+    image: "/images/placeholder-product.jpg",
     price: "$11.11",
     originalPrice: "$18.05",
     rating: 4.8,
@@ -80,7 +122,7 @@ const allProducts = [
   {
     id: 6,
     title: "2 Pcs Clear Paint Organizer With Paint Brush Holder 2 Layers Acrylic Paint Organizer Paint Storage Rack Craft Paint...",
-    image: "/images/products/paint-organizer.jpg",
+    image: "/images/placeholder-product.jpg",
     price: "$22.99",
     originalPrice: null,
     rating: 4.6,
@@ -93,7 +135,7 @@ const allProducts = [
   {
     id: 7,
     title: "Steamer Board for Clothes With Ironing Glove, 35' 17.5' Hanging Ironing Pad, Steam Iron Stand With Pad for Steaming Clothes",
-    image: "/images/products/steamer-board.jpg",
+    image: "/images/placeholder-product.jpg",
     price: "$27.40",
     originalPrice: null,
     rating: 4.3,
@@ -106,7 +148,7 @@ const allProducts = [
   {
     id: 8,
     title: "Selfckf 24 Pieces Christmas Booze Balls Fillable Booze Tree Ornaments Clear Plastic Round Christmas Ornaments Pendant...",
-    image: "/images/products/christmas-ornaments.jpg",
+    image: "/images/placeholder-product.jpg",
     price: "$18.90",
     originalPrice: null,
     rating: 4.4,
@@ -155,6 +197,46 @@ const allProducts = [
     primeEligible: true,
     addToCart: true,
     keywords: ["mouse", "gaming", "rgb", "programmable", "computer", "laptop"]
+  },
+  {
+    id: 12,
+    title: "Premium Quality Product - High Performance Design",
+    image: "/Product06.jpeg",
+    price: "$45.99",
+    originalPrice: "$59.99",
+    rating: 4.2,
+    reviews: 234,
+    deliveryDate: "Wed, Oct 8",
+    primeEligible: true,
+    addToCart: true,
+    keywords: ["premium", "quality", "performance", "design", "product"]
+  },
+  {
+    id: 13,
+    title: "Professional Grade Equipment - Durable and Reliable",
+    image: "/Product07.jpeg",
+    price: "$78.50",
+    originalPrice: null,
+    rating: 4.7,
+    reviews: 567,
+    deliveryDate: "Thu, Oct 9",
+    primeEligible: true,
+    addToCart: true,
+    keywords: ["professional", "equipment", "durable", "reliable", "grade"]
+  },
+  {
+    id: 14,
+    title: "Advanced Technology Solution - Innovation at its Best",
+    image: "/Product08.jpeg",
+    price: "$129.99",
+    originalPrice: "$149.99",
+    rating: 4.8,
+    reviews: 892,
+    deliveryDate: "Wed, Oct 8",
+    primeEligible: true,
+    badge: "Best Choice",
+    addToCart: true,
+    keywords: ["technology", "advanced", "solution", "innovation", "best"]
   }
 ];
 
@@ -406,11 +488,6 @@ export default function ProductListing() {
                           width={300}
                           height={300}
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Fallback to placeholder if image fails to load
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/images/placeholder-product.jpg';
-                          }}
                         />
                       </div>
                       {product.badge && (
