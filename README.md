@@ -1,31 +1,63 @@
 # ShopHub E-commerce Frontend
 
-A modern, responsive e-commerce platform built with Next.js 15, featuring advanced product listing creation, AI-powered content generation, and seamless file management.
+# ClearStream Inc. – Application Overview
 
-## 🚀 Features
+## What our application does
+ClearStream Inc. is a goal-oriented advertising system that allows small business owners to define specific sales objectives and let AI optimize campaigns end-to-end.  
 
-### 1. **Product Listing Creation**
-- **File Upload**: Upload product images directly to MongoDB GridFS
-- **AI Content Generation**: Automatic product title, description, and marketing content generation
-- **Real-time Preview**: Instant preview of uploaded images
-- **Form Validation**: Complete form validation with error handling
+The platform serves:
+- **Sellers** by helping them create professional ad campaigns.  
+- **Buyers** by delivering authentic and personalized ads.  
+- **Platforms** by fostering stronger engagement across their ecosystems.  
 
-### 2. **Product Browsing**
-- **Product Catalog**: Browse extensive product collections
-- **Search Functionality**: Advanced search with category filtering
-- **Product Details**: Detailed product view pages with ratings and reviews
-- **Responsive Design**: Optimized for all device sizes
+Sellers can set campaign goals, allocate budgets dynamically, upload product images, preview AI-generated ad variations, and monitor performance in real-time, while the backend optimizes ad distribution and targeting automatically.
 
-### 3. **User Authentication**
-- **Login/Signup**: Complete user authentication system
-- **Form Validation**: Client-side and server-side validation
-- **Secure API**: JWT-based authentication
+---
 
-### 4. **Modern UI Components**
-- **Responsive Header**: Mobile-first navigation with search
-- **Interactive Cards**: Product cards with hover effects
-- **Loading States**: Beautiful loading animations
-- **Error Handling**: User-friendly error messages
+## What framework it uses
+- **Frontend**: JavaScript-based, built with **React/Next.js** and styled with **ShadCN UI** for a clean, responsive design.  
+- **Backend**: Python with **FastAPI**, handling data processing, optimization logic, and integrations with marketplaces/e-commerce platforms.  
+
+📂 Repo link: [GitHub – hsi_battle](https://github.com/dipeshpandit12/hsi_battle)
+
+---
+
+## How judges should navigate/interpret the application
+
+### Step 1 – Clone the Repository
+Browse the current repo and use `git clone` to download it.
+
+### Step 2 – Setup Environment for Frontend
+Create a `.env` file in the frontend directory and add:
+```env
+MONGODB_URI=String
+JWT_SECRET=SECRET_KEY
+
+Then run:
+
+npm install
+npm run dev
+
+
+This starts the program.
+
+Step 3 – Setup Backend
+
+Clone the backend repo.
+
+Create a .env file and add:
+
+PORT=YOUR_PORT
+GEMINI_API_KEY=GEMINI_STRING
+
+
+Then run:
+
+pip3 install -r requirements.txt
+python3 main.py
+
+
+The backend will now be up and running.
 
 ## 🏗️ Architecture
 
