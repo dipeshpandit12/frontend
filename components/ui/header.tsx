@@ -1,25 +1,28 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, MapPin, ShoppingCart, Menu, Globe } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 
 export default function Header() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('query') || '');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      // Navigate to product listing page with search query
+      const searchUrl = `/product-listing?query=${encodeURIComponent(searchQuery.trim())}`;
+      
+      // Update the URL
+      router.push(searchUrl);
       console.log('Search Query:', searchQuery);
       console.log('Category:', selectedCategory);
-      // Here you can add your search logic, such as:
-      // - Navigate to search results page
-      // - Call an API
-      // - Filter products
-      // - etc.
-      alert(`Searching for "${searchQuery}" in category "${selectedCategory}"`);
+      console.log('Navigating to:', searchUrl);
     }
   };
 
@@ -57,8 +60,12 @@ export default function Header() {
 
         {/* Search Bar */}
         <div className="flex-1 max-w-2xl">
-          <div className="flex">
-            <select className="bg-[#D2E9F4] text-[#1E5B87] px-3 py-2 rounded-l border-r text-sm focus:outline-none">
+          <form onSubmit={handleSearch} className="flex">
+            <select 
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-[#D2E9F4] text-[#1E5B87] px-3 py-2 rounded-l border-r text-sm focus:outline-none"
+            >
               <option>All</option>
               <option>Arts & Crafts</option>
               <option>Automotive</option>
@@ -91,12 +98,18 @@ export default function Header() {
             <Input 
               type="text" 
               placeholder="Search ShopHub" 
-              className="flex-1 px-4 py-2 border-none rounded-none text-[#1E5B87]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="flex-1 px-4 py-2 border-none rounded-none text-white bg-[#1E5B87] placeholder:text-[#D2E9F4]"
             />
-            <Button className="bg-[#D2E9F4] hover:bg-white text-[#1E5B87] px-4 py-2 rounded-r">
+            <Button 
+              type="submit"
+              className="bg-[#D2E9F4] hover:bg-white text-[#1E5B87] px-4 py-2 rounded-r"
+            >
               <Search className="w-5 h-5" />
             </Button>
-          </div>
+          </form>
         </div>
 
         {/* Language/Country */}
