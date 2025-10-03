@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Product Search - ShopHub',
@@ -38,8 +39,8 @@ export default function ProductListingLayout({
               <div>
                 <h4 className="font-semibold mb-4">Quick Links</h4>
                 <ul className="space-y-2 text-[#D2E9F4] text-sm">
-                  <li><a href="/" className="hover:text-white transition-colors">Home</a></li>
-                  <li><a href="/product-listing" className="hover:text-white transition-colors">All Products</a></li>
+                  <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
+                  <li><Link href="/product-listing" className="hover:text-white transition-colors">All Products</Link></li>
                   <li><a href="#" className="hover:text-white transition-colors">Best Sellers</a></li>
                   <li><a href="#" className="hover:text-white transition-colors">New Arrivals</a></li>
                   <li><a href="#" className="hover:text-white transition-colors">Deals</a></li>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import FileUpload from '@/components/ui/file-upload';
 
 interface AvatarUploadProps {
@@ -18,7 +18,7 @@ export default function AvatarUpload({
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
 
-  const handleUploadSuccess = async (fileId: string, filename: string) => {
+  const handleUploadSuccess = async (fileId: string) => {
     setIsUpdating(true);
     setError('');
 
@@ -29,12 +29,12 @@ export default function AvatarUpload({
         throw new Error('No authentication token found');
       }
 
-      const formData = new FormData();
       // We need to fetch the file and re-upload it to the avatar endpoint
       // For now, let's just notify success and let the parent handle it
       onUploadSuccess?.(fileId);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Upload failed';
+      setError(errorMessage);
     } finally {
       setIsUpdating(false);
     }
@@ -50,9 +50,11 @@ export default function AvatarUpload({
         {/* Current Avatar Display */}
         {currentAvatarFileId && (
           <div className="flex justify-center">
-            <img
+            <Image
               src={`/api/files/${currentAvatarFileId}`}
               alt="Current avatar"
+              width={96}
+              height={96}
               className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
             />
           </div>
