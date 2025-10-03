@@ -20,11 +20,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-    let decoded: any;
+    let decoded: jwt.JwtPayload | string;
 
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         { error: 'Invalid token' },
         { status: 401 }
@@ -60,7 +60,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Find user
-    const user = await User.findById(decoded.userId);
+    const userId = typeof decoded === 'string' ? decoded : decoded.userId;
+    const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -113,10 +114,11 @@ export async function PUT(request: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Avatar update error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

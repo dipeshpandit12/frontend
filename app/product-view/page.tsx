@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import Header from '@/components/ui/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -132,9 +133,11 @@ export default function ProductView() {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="aspect-square bg-gray-50 rounded-lg overflow-hidden border-2 border-gray-200">
-              <img 
+              <Image 
                 src={product.image} 
                 alt={product.title}
+                width={500}
+                height={500}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -153,9 +156,11 @@ export default function ProductView() {
                     selectedImage === index - 1 ? 'border-[#1E5B87]' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img 
+                  <Image 
                     src={product.image} 
                     alt={`${product.title} view ${index}`}
+                    width={100}
+                    height={100}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -196,7 +201,7 @@ export default function ProductView() {
             {/* Slogan */}
             <div className="bg-[#D2E9F4] p-4 rounded-lg">
               <p className="text-[#1E5B87] text-xl font-medium italic text-center">
-                "{product.slogan}"
+                &ldquo;{product.slogan}&rdquo;
               </p>
             </div>
 

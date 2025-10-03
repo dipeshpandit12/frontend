@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import Header from '@/components/ui/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Star, Heart, ChevronDown } from 'lucide-react';
+import { Star, Heart } from 'lucide-react';
 
 // Complete product database
 const allProducts = [
   {
     id: 1,
-    title: "100 PCS Clear PET Plastic Storage Boxes Transparent Present Box Empty Container's Rectangle Cube Candy Chocolate...",
+    title: "100 PCS Clear PET Plastic Storage Boxes Transparent Present Box Empty Container&apos;s Rectangle Cube Candy Chocolate...",
     image: "/images/products/storage-boxes.jpg",
     price: "$23.99",
     originalPrice: null,
@@ -399,9 +400,11 @@ export default function ProductListing() {
                     {/* Product Image */}
                     <div className="relative mb-3">
                       <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                        <img 
+                        <Image 
                           src={product.image} 
                           alt={product.title}
+                          width={300}
+                          height={300}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             // Fallback to placeholder if image fails to load

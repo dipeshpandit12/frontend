@@ -17,7 +17,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 interface LoginFormProps {
-  onSuccess?: (user: any) => void;
+  onSuccess?: (user: Record<string, unknown>) => void;
   onSwitchToSignup?: () => void;
 }
 
@@ -57,8 +57,9 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
       localStorage.setItem('user', JSON.stringify(result.user));
 
       onSuccess?.(result.user);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -113,7 +114,7 @@ export default function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProp
 
             {onSwitchToSignup && (
               <div className="text-center text-sm">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <button
                   type="button"
                   onClick={onSwitchToSignup}

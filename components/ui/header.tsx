@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { Search, MapPin, ShoppingCart, Menu, Globe } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
@@ -34,9 +35,11 @@ export default function Header() {
   return (
     <header className="bg-[#1E5B87] text-white">
       {/* Top Banner */}
-      <div className="bg-[#164a73] text-xs py-2 px-4 text-center">
-        <span>You are on our website. Explore our amazing products with fast delivery. </span>
-        <a href="#" className="text-[#D2E9F4] hover:underline">Click here to learn more</a>
+            {/* Top Banner */}
+      <div className="bg-[#164a73] text-xs py-2 px-2 sm:px-4 text-center">
+        <span className="hidden sm:inline">You are on our website. Explore our amazing products with fast delivery. </span>
+        <span className="sm:hidden">Fast delivery available. </span>
+        <Link href="/" className="text-[#D2E9F4] hover:underline">Click here to learn more</Link>
       </div>
 
       {/* Main Header */}
