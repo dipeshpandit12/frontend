@@ -146,8 +146,15 @@ export default function Header() {
       </div>
 
       {/* Navigation Bar */}
-      <div className="bg-[#164a73] px-4 py-2">
-        <div className="flex items-center space-x-6 text-sm">
+      {/* Navigation Bar */}
+      <div className="bg-[#164a73] px-2 sm:px-4 py-2">
+        <div 
+          className="flex items-center space-x-3 sm:space-x-6 text-xs sm:text-sm overflow-x-auto"
+          style={{
+            scrollbarWidth: 'none', // Firefox
+            msOverflowStyle: 'none', // IE and Edge
+          }}
+        >
           <Button variant="ghost" size="sm" className="text-white hover:bg-[#1E5B87]">
             <Menu className="w-4 h-4 mr-2" />
             All
