@@ -2,7 +2,6 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './button';
-import { Card } from './card';
 
 export default function HeroBanner() {
   return (

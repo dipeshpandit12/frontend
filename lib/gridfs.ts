@@ -20,12 +20,12 @@ export const uploadFileToGridFS = async (
   file: Buffer,
   filename: string,
   contentType: string,
-  metadata?: any
+  metadata?: Record<string, unknown>
 ): Promise<{ success: boolean; fileId?: ObjectId; error?: string }> => {
   try {
     const bucket = await getGridFSBucket();
     
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const uploadStream = bucket.openUploadStream(filename, {
         contentType,
         metadata: {

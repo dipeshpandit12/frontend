@@ -28,7 +28,7 @@ export default function Header() {
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSearch(e as any);
+      handleSearch(e as React.FormEvent);
     }
   };
   return (
@@ -67,33 +67,33 @@ export default function Header() {
               className="bg-[#D2E9F4] text-[#1E5B87] px-3 py-2 rounded-l border-r text-sm focus:outline-none"
             >
               <option>All</option>
-              <option>Arts & Crafts</option>
+              <option>Arts &amp; Crafts</option>
               <option>Automotive</option>
               <option>Baby</option>
-              <option>Beauty & Personal Care</option>
+              <option>Beauty &amp; Personal Care</option>
               <option>Books</option>
-              <option>Boys' Fashion</option>
+              <option>Boys&apos; Fashion</option>
               <option>Computers</option>
               <option>Deals</option>
               <option>Digital Music</option>
               <option>Electronics</option>
-              <option>Girls' Fashion</option>
-              <option>Health & Household</option>
-              <option>Home & Kitchen</option>
-              <option>Industrial & Scientific</option>
+              <option>Girls&apos; Fashion</option>
+              <option>Health &amp; Household</option>
+              <option>Home &amp; Kitchen</option>
+              <option>Industrial &amp; Scientific</option>
               <option>Kindle Store</option>
               <option>Luggage</option>
-              <option>Men's Fashion</option>
-              <option>Movies & TV</option>
-              <option>Music, CDs & Vinyl</option>
+              <option>Men&apos;s Fashion</option>
+              <option>Movies &amp; TV</option>
+              <option>Music, CDs &amp; Vinyl</option>
               <option>Pet Supplies</option>
               <option>Prime Video</option>
               <option>Software</option>
               <option>Sports & Outdoors</option>
-              <option>Tools & Home Improvement</option>
-              <option>Toys & Games</option>
+              <option>Tools &amp; Home Improvement</option>
+              <option>Toys &amp; Games</option>
               <option>Video Games</option>
-              <option>Women's Fashion</option>
+              <option>Women&apos;s Fashion</option>
             </select>
             <Input 
               type="text" 
@@ -121,13 +121,13 @@ export default function Header() {
         {/* Account & Lists */}
         <div className="hidden lg:flex flex-col text-sm">
           <span className="text-[#D2E9F4] text-xs">Hello, sign in</span>
-          <span className="font-semibold">Account & Lists</span>
+          <span className="font-semibold">Account &amp; Lists</span>
         </div>
 
         {/* Returns & Orders */}
         <div className="hidden lg:flex flex-col text-sm">
           <span className="text-[#D2E9F4] text-xs">Returns</span>
-          <span className="font-semibold">& Orders</span>
+          <span className="font-semibold">&amp; Orders</span>
         </div>
 
         {/* Cart */}

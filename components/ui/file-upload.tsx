@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface FileUploadProps {
   onUploadSuccess?: (fileId: string, filename: string) => void;
@@ -54,8 +52,9 @@ export default function FileUpload({
       }
 
       onUploadSuccess?.(result.fileId, result.filename);
-    } catch (error: any) {
-      onUploadError?.(error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      onUploadError?.(errorMessage);
     } finally {
       setIsUploading(false);
     }
