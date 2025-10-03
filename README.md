@@ -31,6 +31,8 @@ Create a `.env` file in the frontend directory and add:
 MONGODB_URI=String
 JWT_SECRET=SECRET_KEY
 
+```
+
 Then run:
 
 npm install
@@ -44,11 +46,11 @@ Step 3 – Setup Backend
 Clone the backend repo.
 
 Create a .env file and add:
-
+```
 PORT=YOUR_PORT
 GEMINI_API_KEY=GEMINI_STRING
 
-
+```
 Then run:
 
 pip3 install -r requirements.txt
