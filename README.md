@@ -1,5 +1,3 @@
-# ShopHub E-commerce Frontend
-
 # ClearStream Inc. – Application Overview
 
 ## What our application does
