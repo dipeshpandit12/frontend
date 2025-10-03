@@ -86,6 +86,7 @@ frontend/
 │   │   └── user/                 # User management
 │   ├── product-listing/          # Product catalog page
 │   ├── product-view/             # Product detail page
+│   ├── product-review/             # see the ad
 │   └── seller-listing/           # Product creation page
 ├── components/                   # Reusable UI components
 │   ├── auth/                     # Authentication forms
