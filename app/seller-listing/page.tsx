@@ -31,6 +31,8 @@ export default function SellerListingPage() {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingTime, setProcessingTime] = useState(30)
+  const [backendLogs, setBackendLogs] = useState<string[]>([])
+  const [showDataFlow, setShowDataFlow] = useState(false)
 
   // Processing timer effect
   useEffect(() => {
@@ -68,10 +70,13 @@ export default function SellerListingPage() {
   }
 
   const uploadFileToMongoDB = async (file: File): Promise<string> => {
+    setBackendLogs(prev => [...prev, `📤 Uploading ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB) to MongoDB...`])
     console.log('Uploading file:', file.name, 'Size:', file.size)
     
     const formData = new FormData()
     formData.append('file', file)
+    
+    setBackendLogs(prev => [...prev, `🔄 Sending file to /api/upload endpoint...`])
     
     const response = await fetch('/api/upload', {
       method: 'POST',
@@ -79,16 +84,22 @@ export default function SellerListingPage() {
     })
     
     console.log('Upload response status:', response.status)
+    setBackendLogs(prev => [...prev, `📡 Response status: ${response.status}`])
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
       console.error('Upload error:', errorData)
+      setBackendLogs(prev => [...prev, `❌ Upload failed: ${errorData.error}`])
       throw new Error(errorData.error || 'Failed to upload image')
     }
     
     const data = await response.json()
     console.log('Upload success:', data)
-    return `/api/files/${data.fileId}`
+    const mongoUrl = `/api/files/${data.fileId}`
+    setBackendLogs(prev => [...prev, `✅ File stored in MongoDB with ID: ${data.fileId}`])
+    setBackendLogs(prev => [...prev, `🔗 MongoDB URL generated: ${mongoUrl}`])
+    setShowDataFlow(true)
+    return mongoUrl
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,28 +151,43 @@ export default function SellerListingPage() {
 
     setIsLoading(true)
     setError('')
+    setBackendLogs(prev => [...prev, `🚀 Preparing to send data to backend server...`])
 
     try {
       const absoluteImageUrl = uploadedImageUrl.startsWith('/') 
         ? `${window.location.origin}${uploadedImageUrl}` 
         : uploadedImageUrl
 
+      setBackendLogs(prev => [...prev, `📋 Data being sent to backend:`])
+      setBackendLogs(prev => [...prev, `   • MongoDB Image URL: ${absoluteImageUrl}`])
+      setBackendLogs(prev => [...prev, `   • Text Description: "${description.substring(0, 50)}..."`])
+      setBackendLogs(prev => [...prev, `🌐 Sending POST request to: https://hsi-battle.onrender.com/processing-input`])
+
+      const payload = {
+        image_url: absoluteImageUrl,
+        text: description
+      }
+
+      setBackendLogs(prev => [...prev, `📦 Payload: ${JSON.stringify(payload, null, 2)}`])
+
       const res = await fetch('https://hsi-battle.onrender.com/processing-input', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          image_url: absoluteImageUrl,
-          text: description
-        })
+        body: JSON.stringify(payload)
       })
 
+      setBackendLogs(prev => [...prev, `📡 Backend response status: ${res.status}`])
+
       if (!res.ok) {
+        setBackendLogs(prev => [...prev, `❌ Backend request failed with status ${res.status}`])
         throw new Error('Failed to process request')
       }
 
       const data: ApiResponse = await res.json()
+      setBackendLogs(prev => [...prev, `✅ Backend processing successful!`])
+      setBackendLogs(prev => [...prev, `📊 Response received with trace_id: ${data.trace_id}`])
       setResponse(data)
       
       // Start the 30-second processing countdown
@@ -169,6 +195,7 @@ export default function SellerListingPage() {
       setProcessingTime(30)
     } catch (err) {
       setError('Failed to process your request. Please try again.')
+      setBackendLogs(prev => [...prev, `❌ Error: ${err}`])
       console.error(err)
     } finally {
       setIsLoading(false)
@@ -208,6 +235,8 @@ export default function SellerListingPage() {
     setIsDemoMode(false)
     setIsProcessing(false)
     setProcessingTime(30)
+    setBackendLogs([])
+    setShowDataFlow(false)
   }
 
   return (
@@ -217,8 +246,9 @@ export default function SellerListingPage() {
         <h1 className="text-3xl font-bold mb-8 text-gray-900">Create Product Listing</h1>
         
         {!response ? (
-          <Card className="p-6 shadow-lg border border-gray-200 bg-white">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <>
+            <Card className="p-6 shadow-lg border border-gray-200 bg-white">
+              <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-700">
                   Product Image
@@ -296,22 +326,23 @@ export default function SellerListingPage() {
               )}
 
               <Button 
-                type="submit" 
-                disabled={isLoading || isUploading || !description.trim()}
+                type="button"
+                onClick={handleRealSubmission}
+                disabled={isLoading || isUploading || !uploadedImageUrl || !description.trim()}
                 className="w-full py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Processing...</span>
+                    <span>Sending to Backend...</span>
                   </div>
                 ) : isUploading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Uploading...</span>
+                    <span>Uploading to MongoDB...</span>
                   </div>
                 ) : (
-                  'Create Listing'
+                  'Send to Backend Server'
                 )}
               </Button>
               
@@ -334,6 +365,61 @@ export default function SellerListingPage() {
               )}
             </form>
           </Card>
+
+          {/* Data Flow Visualization */}
+          {showDataFlow && backendLogs.length > 0 && (
+            <Card className="p-6 shadow-lg border border-blue-200 bg-blue-50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-blue-800">📊 MongoDB → Backend Data Flow</h3>
+                <Button 
+                  onClick={() => setShowDataFlow(false)}
+                  variant="ghost" 
+                  size="sm"
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {backendLogs.map((log, index) => (
+                  <div 
+                    key={index}
+                    className="text-sm font-mono bg-white p-2 rounded border border-blue-200 text-gray-800"
+                  >
+                    <span className="text-blue-600 font-semibold">[{new Date().toLocaleTimeString()}]</span> {log}
+                  </div>
+                ))}
+              </div>
+              
+              {uploadedImageUrl && description && (
+                <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-2">📤 Data Ready for Backend:</h4>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">MongoDB Image URL:</span>
+                      <div className="font-mono text-blue-600 bg-blue-50 p-1 rounded text-xs mt-1">
+                        {uploadedImageUrl.startsWith('/') ? `${window.location.origin}${uploadedImageUrl}` : uploadedImageUrl}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Text Description:</span>
+                      <div className="text-gray-800 bg-gray-50 p-2 rounded text-xs mt-1">
+                        "{description}"
+                      </div>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Backend Endpoint:</span>
+                      <div className="font-mono text-green-600 bg-green-50 p-1 rounded text-xs mt-1">
+                        POST https://hsi-battle.onrender.com/processing-input
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+          </>
         ) : (
           <div className="space-y-6">
             <div className="flex justify-between items-center">

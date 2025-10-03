@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Play, Pause, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 
 interface MediaItem {
@@ -12,25 +12,24 @@ interface MediaItem {
   alt?: string
 }
 
+interface ApiResponse {
+  success: boolean
+  data?: any
+  error?: string
+}
+
+// Api to access the backend server
+const API_BASE_URL = 'https://hsi-battle.onrender.com'
+
 export default function ProductPreviewPage() {
   const router = useRouter()
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isVideoPlaying, setIsVideoPlaying] = useState(false)
-  
-  // Sample media items - in a real app, these would come from props or API
-  const mediaItems: MediaItem[] = [
-    {
-      type: 'image', 
-      src: '/demo1.png',
-      alt: 'Texas State Merchandise - Shirt Back'
-    },
-    {
-      type: 'video',
-      src: '/demo.mp4',
-      alt: 'Texas State Merchandise Video Demo'
-    }
-  ]
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
+  
   const productData = {
     title: "The official texas state shirt",
     description: "New Texas State merch is here! Shop the freshest Maroon & Gold apperel. Don't wait show your BObcat pride now!",
@@ -38,19 +37,142 @@ export default function ProductPreviewPage() {
     slogan: "Eat 'Em Up, Look Sharp."
   }
 
+  // Fetch image from backend
+  const fetchImage = async (): Promise<string | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/image-generation`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // If the response is an image blob, create object URL
+      if (response.headers.get('content-type')?.startsWith('image/')) {
+        const blob = await response.blob()
+        return URL.createObjectURL(blob)
+      }
+      
+      // If the response is JSON with image URL
+      const data = await response.json()
+      return data.imageUrl || data.url || data.data?.imageUrl || null
+    } catch (error) {
+      console.error('Error fetching image:', error)
+      return null
+    }
+  }
+
+  // Fetch video from backend
+  const fetchVideo = async (): Promise<string | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/video-generation`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // If the response is a video blob, create object URL
+      if (response.headers.get('content-type')?.startsWith('video/')) {
+        const blob = await response.blob()
+        return URL.createObjectURL(blob)
+      }
+      
+      // If the response is JSON with video URL
+      const data = await response.json()
+      return data.videoUrl || data.url || data.data?.videoUrl || null
+    } catch (error) {
+      console.error('Error fetching video:', error)
+      return null
+    }
+  }
+
+  // Load media items from backend
+  useEffect(() => {
+    const loadMediaItems = async () => {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        // Fetch both image and video concurrently
+        const [imageUrl, videoUrl] = await Promise.all([
+          fetchImage(),
+          fetchVideo()
+        ])
+
+        const items: MediaItem[] = []
+        
+        // Add image if successfully fetched
+        if (imageUrl) {
+          items.push({
+            type: 'image',
+            src: imageUrl,
+            alt: 'Generated Product Image'
+          })
+        }
+        
+        // Add video if successfully fetched
+        if (videoUrl) {
+          items.push({
+            type: 'video',
+            src: videoUrl,
+            alt: 'Generated Product Video'
+          })
+        }
+        
+        // If no media was fetched, show error
+        if (items.length === 0) {
+          setError('Failed to load media content from backend')
+        } else {
+          setMediaItems(items)
+        }
+      } catch (error) {
+        console.error('Error loading media items:', error)
+        setError('Failed to load media content')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadMediaItems()
+
+    // Cleanup object URLs when component unmounts
+    return () => {
+      mediaItems.forEach(item => {
+        if (item.src.startsWith('blob:')) {
+          URL.revokeObjectURL(item.src)
+        }
+      })
+    }
+  }, []) // Empty dependency array means this runs once on mount
+
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % mediaItems.length)
-    setIsVideoPlaying(false)
+    if (mediaItems.length > 0) {
+      setCurrentSlide((prev) => (prev + 1) % mediaItems.length)
+      setIsVideoPlaying(false)
+    }
   }
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
-    setIsVideoPlaying(false)
+    if (mediaItems.length > 0) {
+      setCurrentSlide((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
+      setIsVideoPlaying(false)
+    }
   }
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index)
-    setIsVideoPlaying(false)
+    if (index >= 0 && index < mediaItems.length) {
+      setCurrentSlide(index)
+      setIsVideoPlaying(false)
+    }
   }
 
   const toggleVideoPlay = () => {
@@ -70,6 +192,47 @@ export default function ProductPreviewPage() {
   }
 
   const currentMedia = mediaItems[currentSlide]
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-4">
+              <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
+              <h2 className="text-xl font-semibold">Loading Media Content...</h2>
+              <p className="text-muted-foreground">Fetching images and videos from backend</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error || mediaItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-4">
+              <div className="text-red-500 text-6xl">⚠️</div>
+              <h2 className="text-xl font-semibold text-red-600">Failed to Load Media</h2>
+              <p className="text-muted-foreground">{error || 'No media content available'}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                className="mt-4"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -110,34 +273,40 @@ export default function ProductPreviewPage() {
               </div>
             )}
 
-            {/* Navigation Arrows */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-
-            {/* Slide Indicators */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-              {mediaItems.map((_, index) => (
+            {/* Navigation Arrows - Only show if multiple media items */}
+            {mediaItems.length > 1 && (
+              <>
                 <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors ${
-                    index === currentSlide 
-                      ? 'bg-white' 
-                      : 'bg-white/50 hover:bg-white/70'
-                  }`}
-                />
-              ))}
-            </div>
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+
+            {/* Slide Indicators - Only show if multiple media items */}
+            {mediaItems.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
+                {mediaItems.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToSlide(index)}
+                    className={`w-3 h-3 rounded-full transition-colors ${
+                      index === currentSlide 
+                        ? 'bg-white' 
+                        : 'bg-white/50 hover:bg-white/70'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
